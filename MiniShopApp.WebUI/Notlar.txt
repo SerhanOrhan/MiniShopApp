@@ -1,0 +1,18 @@
+﻿stripe.com ödeme sıstemleri
+iyzico.com ödeme sıtesı
+
+Entension klasorunde  oto margiration ıslemlerını yaptık.
+
+				Bu projeyi yayınlamaya hazırlamak
+startup projesinde terminal acarız. self-contained kestel sunucusunu kullanılmasını ıstemıyorsak false yaparız.
+True yaparsan içine .net core u da atar buda sunucuda agırlaga sebep olabılır.
+Bu nedenle false yaparız ve attıgımız sunucuda zaten .net core olacağı için orda çalışaacaktır.
+terminal kodu
+dotnet publish -c relase --no-self-contained         
+-o ile yolu 
+-f ile dotnet surumu belirtebiliriz.
+
+
+http://www.serhanorhan.somee.com
+publish edildi.
+

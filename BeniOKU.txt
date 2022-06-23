@@ -1,0 +1,99 @@
+
+##Bu Projenin baþtan sona yapýlýþý##
+1)Ýlk önce blank bir solution oluþtururuz.
+2)Daha sonra katmanlý mýmarý yapýsýný oluþturan class library projelerini oluþtururuz.
+3)Ýlk olarak MiniShopApp.Entity yani entitylerimizi barýndýran  projeyi oluþtururuz. Tabiki türü class library
+4)Daha sonra ayný þekilde MiniShopApp.Data oluþtururuz.Burada ise absctract concrete ve migrations iþlemleri tutulur.
+5)Bir sonraki adýmda ise MiniShopApp.WebUI  adýnda bi mvc projesi oluþturuurz.Burasý bizim tamamen  kullanýcýn gordugu kýsýmdýr.
+6)Bir sonraki adýmda ise MiniShopApp.Business oluþtururuz.Buranýn amacý ise WebUI ile data katmanýn arasýnda bir aracý bölgedir validation iþlemleri genel burada yapýlýr.
+7)Her zaman olduðu gibi ilk olarak Entitylerimizi oluþturmak için MiniShopApp içerisine claslar olusturarak entityleri oluþtururuz.
+8)Entity clasý oluþrurur oluþturmaz unutmamaýz gerek sey o classý dýþardan cagýrabýlmek ýcýn hemen  public yapmaktýr.
+9)Daha sonra içerisine veritabaný tasarýmýmýza uygun propertyleri oluþturururz.
+10)Eðer ihtiyaç varsa jungtion class oluþturarak aralarýnda çoka çok iliþki olan iki classý arada bir araçý class kullanarak 1 e çok þeklide ayýrmamýz gerekir.
+11)Entitylerimizi oluþturduktan sonra MiniShopApp.Data projemize geçerek abstract,concrete,migrations lar ayarlanýr.
+12)MiniShopApp.Data içerisine Abstract,Concrete Adýnda 2 dosya oluþturalým.
+13)Daha Sonra Concrete klasörünün içerisine kullanýlacak veritabaný teknolojilerinin adýný barýndýran klasörler oluþturulur.Örnek EfCore,Mysql,Oracle
+14)Bir sonraki adýmda ise biz EfCore ile çalýþacaðýmýz için EfCore klasörünün içerisine bir MiniShopContext clasý oluþturarak dbcontext iþlemlerini hazýrlamaya baþlayalým.
+15)Tabiki burada Dbcontext ve Sqlite kullancaðýmýz için gerekli paketleri lazým olan projeye yuklememýz gerekýr.
+16)Yüklenmesi gereken paketlerin ilgili projenin dependencies kýsmýnda sag týklayýp manage nuget package acýlýr.
+17)Ve sýrasýyla Microsoft.EntityFrameworkCore, Microsoft.EntityFrameworkCore.Sqlite ve Microsoft.EntityFrameworkCore.Design donet surumune gore uyumlu sürümleri yükenir.
+18)Yuklemeler bittikten sonra  ise MiniShopContext classýmýzý :Dbcontextden türetip usingini yapmamýz gereklidir.
+19)Daha sonra entitylerimize buradan ulasmak için proplar veririz fakat bu proplar Dbset<Category> yani db set içerisinde entity isimini yazarak oluþturulur.
+20)Bu properyleri oluþturma iþi bittikten sonra ise override on tab yaparak onconfiguring iþlemi yapmamýz gereklidir.
+21)Burada opitonsBuilder.UseSqlite("Data Source=MiniShopDb"); yazarak biz sqllite veritabaný kullandýðýmýz için onun syntaxlarýna uygun string bir connection string oluþtururuz.
+22)OnCongiruing iþleminden sonra ise override onModel tab yapýnca OnModelCreating Methodu caðrýlýr burada ise jungtion tabledeki 2 ayrý id yi tek bir primary key haline getirme iþlemi yapýlýr
+23)Bunun yapýlmasýnýn nedeni ise bu iki ayrý tablodan gelen iki farklý Id bir daha ayný sekilde yazýlmasýn diye veritabaný oluþurken bu özelliklerin verilmesini bu method saðlar kullanýmý ise
+24)Þu þekildedir; modelBuilder.Entity<ProductCategory>().Haskey(pc=>new {pc.CategoryId,pc.ProductId}); þeklindedir ilgili entitynin içerisindeki ayný categoryId ve productId karþýlaþýrsa 1 kere bu karþýlasmaya izin ver demektýr.
+25)Bu iþlemden sonra context clasýmýzda yapacagýmýz iþlemler tamamlanýr.Daha sonra veritabaný oluþurken default verilerin olmasýný istediðimiz baþlangýc verileir saðlan classý oluþtururuz.
+26)Bu classýn ismi ise SeedDatabase olur.Seed in türkce anlamýnda anlasýldýgý uzere tohumlamaktýr.Bu veritabaný oluþurken eðer içi boþssa bunlarla doldur demektir.
+27)Bu classa dýþarýdan bir mudahele yapýlmasýný istemediðimiz için public yapýyoruz kullanýlsýn fakat static yaparak içerisine mudahele edilmesini istemiyoruz.
+28)Static olan bir clasýn bütün methodlarýda static olmak zorundadýr.Bu yuzden içerisibe Seed adýnca bir method oluþtururuz.
+29)var context =new MiniShopContext(); yazarak context clasýmýz türünden bir deðiþken  oluþtururuz.
+30)Daha sonra bir if blogunun içerisinde if(context.Database.GetPendingMigrations().Count()==0) yazarak yani context içerisindeki database GetPendingMigrations edildiðinde bu mvcore methodu oldugu ýcýn using edeilmesi gerekir. .Count()==0 olursa çalýþ demek için bu if blogunu yazarýz.
+31)Bir sonraki aþamada ise içerisine bir if(context.Categories.Count()==0) þeklinde bir if blogu daha atarak Categories tablosunun içerisi boþssa eðer aþaðýdaki iþlemleri yap demek için bir if blogu daha oluþtururuz.
+32)context.Categories.AddRange(Categories); aþaðýda oluþturacaðýmýz Categories adýnda property içindeki deðerleri context clasýndaký Categories Tablosuna ekle deriz.
+33)Bu iþlemi mevcut bulunan bütün Entitylerimize yaparýz.
+34)hepsi bittikten sonra ise Seed methodu sonunda  context.Savechanges(); yaparak veri tabaný context clasýna bu degerleri gonder deriz ve oda veritabanýan bu deðerleri ekler.
+35)Daha sonra method dýþýna cýkarak bu addrange.(categories) gibi yaptýgýmýz Categories fieldini oluþturmamýz gereklidir.
+36)Bu fiel oluþtururken private static Category[] Categories={ new Category(){Name="Teelefon",Description="Telefon Kategorisi",Url="qwewq"}} þeklinde veriler girilir.
+37)Bu field private static olmasýyla hem dýsardan ulasýlamaz hemde deðiþtirlemez  ve Category[] ile category entitysi tipinde ve  o tipte bir dizi depolayan ismi Categories olan bir alandýr.
+38)Bu iþlemlerin birebir aynýsý diðer Entityler yani tablolar için  yapýlýr.
+39)Bu iþlemlerin hepsi yapýldýktan sonra MiniShopApp.WebUI içerisindeki startup clasýna girip Configure methoduna girip SeedDatabase.Seed(); komutu ekleyerek tanýnmasýný saglanýr bu ýsle sadece proje calýstýgýnda gerceklescektýr.Yani proje calýsmadan o veriler database yansýmayackatýr.
+40)Bu iþlemler sonunda  Artýk migrationsumuz oluþturabiliriz.
+41)dotnet ef migrations add Mig-1 --startup-project ../MiniShopApp.WebUI     kodu ile migration oluþtur ismi Mig-1 olsun ama startup olan projeye .. ile bir üst dizime yaný project sayfasýna gýdýyoz Ve yuklencek proje adýný yazýyoruz.
+42)Bu kod arýclýgýyla migration oluþurken  olmasý gerekn özellikler klasörü data projesinin içerisine oluþur.Daha sonra ayný komutu sadece 'migrations add' kýsmýný silip 'database update' yazarak oluþan Database MiniShopApp.WebUI projesine oluþur.
+43)Ve ardýnda projeyi bir kere calýþtýrarak seed ile yaptýðýmýz tohumlama sadece render olurken calýþacaðý için veri tabaný boþ ise otomatik dolduracaktýr.
+44)Bu iþlemelerden sonra temel crud iþlemlerimiz için bir IRepository interface 'i oluþtururuz.Bu oluþturduðumuz interface public olmalý ve generic yapýda olmalý yani IRepository<T> þeklinde  oluþturulur
+45)Daha sonra temel crud iþlemleri için methodlarýmýzý gövdesi olmayacak þekilde sadece geriye döndürdüðü deðer parametre ve ismi olacak sekýlde yazýlýr.Örneðin  T GetById(int id), þeklinde
+46)Daha sonra her bir entity yani table için ayrý ayrý birertane daha interface oluþtururuz.Bunun nedeni ise temel crud iþlemlerinin yaný sýra o table'a özel bir iþlem yapýlmasý gerektiðinde tekbir interface iþimizi çözmesi için.
+47)Örneðin Product tablemýza bir IProductRepository adýnda bir interface oluþturalým ve public yapalým.Daha sonra bu interface'mizi IRepository interfaceinden türetelim.Yani IRepository interface içindeki methodlar artýk bu IProductRepository interfacesindede kullanýlsýn
+48)Bunuda þu þekilde yaparýz. public interface IProductRepository : IRepository<Product>  IRepository   artýk IRepository interfacesindeki methodlar benim IProductRepository interfaceimdende kullanýlacak
+49)Bu iþlemin aynýsýn diðer entitylere yani tablelarada yaparýz.Ve içerisi boþ olan bu interface temel crud iþlemlerinden farklý bir iþlem yapýlacaðý zaman buradan yazýlýp rahatlýkla kullanmayý saðlar.
+50)Bu iþlemlerde yapýldýktan sonra Abstracta yani soyut ortamda iþlerimiz bitti ve artýk Concrete yani somut ortama geçme  zamanýmýz geldi.
+51)Efcore klasörümüzün içerisine  bir temel crud iþlemlerin rahatlýkla kullanýlmasý için bir generic yapýda bir generic class oluþtururuz.Bu clasýn amacý tek tek imlement ederek crud yapmak yerýne tek bir clasa implement ederek kullanýlcak yere miras vererk hýzlý kullanmayý saglar.
+52)Þimdi EfCoreGenericRepository adýnda bir public class oluþturalým.Fakatbu classda her entityde rahatlýkla kullanýlmasý için generic yapýda olmasý gerekir.Yani clasýmýz þu þekilde olmalýdýr
+53) public class EfCoreGenericRepository<TEntity,TContext> : IRepository<TEntity> where TEntity: class  where TContext : DbContext, new();   
+54)Yukarýdaki kodun anlamý bu class generic yapýda olacak be 2 tane parametre alcak ve IRepository interface'inden turuyecek ve TEntity class turunde TContext DbContext türünde   fakat TContext' den istenildiði zaman yeni bir nesne oluþturulabilecek.
+55)Daha sonra IRepository interfaceinden turetýldýgý için bý class implement edilmesi gerekir.Ýmlementte ise gerekli kodlarýmýzý yazarýz.
+56)Daha sonra iþlem yapacaðýmýz entityler için bir class oluþtururz.Örneðin Category entityim için  EfCoreCategoryRepository  classý oluþturup public yapalým.
+57)Bir sonraki iþlem ise yukarýda EfCoreGenericrepository den miras aldýralým ve istenilen paramereler girirlir daha sonra ICategoryRepository dende miras alýnarak onun içersinde crud iþlemlerinden farklý methodlarýmýz varsa ulaþabilmek için
+58)Yani kodlar þu þekilde   public class EfCoreCategoryRepository : EfCoreGenericRepository<Category,MiniShopContext>,ICategoryRepository  þeklinde yazarak EfCoreGenericRepository den türetielerek ve Category ve MiniShopContext parametreleri verilerek
+59)ICategoryRepository interfacedende türetilerek  onunde methodlarýnýn barýndýðý bir class oluþturuldu.Artýk bu class türünden bir obje türetildiðinde o objede ICategoryRepository içindeki methodlar hemde EfCoreGenericRepository classýn içindeki methodlar kullanýlabilecektir.
+60)Bu iþlemi bütün entitylerimize yaparak rahat kullaným saðlanýr.Daha sonra Data projectimizde iþimiz bitiyor ve WebUI ve Data arasýnda genellikle valitaion(filtreleme) iþlemleri için kullanýlan Business projemize geçiyoruz.
+61)Busniness projesinin amacý tamamen WebUI ile Data arasýnada bir aracýdýr.Hiç bir þekilde WebUI dan data ya direk baðlanýlmaz  arada her zaman aracý olan Business katmaný kullanýlýr.
+62)Ýlk Önce Business projemizde Abstract ve Concrete adýnda iki tane klasör oluþturalým.Her zaman olduðu gibi soyut kavramlarýmýzý temsil eden Abstract klasöründen classlarýmýzý oluþturmaya baþlayalým.
+63)Her bir entitymiz için interface classýndan birer service oluþturalým. Örneðim IProductService,ICategoryService þeklinde oluþturalým.
+64)Bu oluþturulan interfacelerin içerisine temel Crud iþlemlerimizi barýndýran IRepositroy içerisndei methodlarý atalým.Fakat Burdaki IRepositorydeki tek fark burdaki crud iþlemleri generic degil hangi entity içinse o yazýlmalýdýr.
+65)Bu interfaceleri her bir entitymiz için tek tek oluþturmamýz gerekiyor.Daha sonra her soyut kavramýn yaný Abstractlarýn birer somut kavramý yani Concreteleri olacaðý için Concrete klasörümüze  bütün entityler için birer class oluþtururz.
+66)Concrete içersine CategoryManager adýnda class oluþturalým.Bu classý hemen public yapýp ICategoryService den türetelim ve implementlerini oluþturalým.
+67)Daha sonra             private ICategoryRepository _categoryRepository   dýþarýdan ulaþýlmayan ve Data projemizin içersindeki Abstract klasörünün içersindeki ICategoryRepository tipinde bir object oluþtururuz.Tabiki bi interface olduðu için implement etmen gerekir demesi gerekiyor bunun ayarlamasýný birazdan startup içerisinde yapcaðýz.
+68)Bu sayede bu oluþturduðumuz objenin içerisindeki methodlara ulaþabiliriz. Daha sonra ctor yazarak  CategoryManager içerisinde bir consturactor oluþtururuz.Bu contsturactor ICategoryRepository tipinde  bir parametre alýr.
+69) public CategoryManager(ICategoryRepository categoryRepository){_categoryRepository=categoryRepository}  diyerek yukarýda tanýmladýðýmýz fielda bu ICategoryRepository tipindeki deðiþkene eþitleyerek artýk field üzerinde bu ICategoryRepository interfaceinin içindeki methodlara ulasýrýz.
+70)Daha Sonra bizim ICategoryService içerisindeki Getall methodunun implement edildiðinde default gelen deðerini deðiþtirerek gerçek Getall methodunu ayarlayalým.
+71)Bu da tanýmladýðýmýz _categoryRepository fieldinin içerisindeki getall methodu çaðýrarak ve bu deðeri geriye döndürerek kolaylýkla kullanmamýzý saðlar.
+72) Getall methodu içerisine þu þekilde yazýlýr     return _categoryRepository.Getall();   yazýlarak ICategoryRepository nin içerisindeki getall bizim ICategoryService içerisindeki getall methodu doldurularak artýk CategoryManager üzerinde rahatlýkla kullanýlmasýný saðlar.
+73)Bu iþlemler tekrardan bütün entityler için yapýlmasý gerekir.Bu iþlemler yapýldýktan sonra  yukarýdak field oluþtururken de bahsettiðim gibi ICategoryRepository tipinde bir nesne oluþtururken sen bunu EfCoreCategoryRepository olarak algýla demek için WebUI içerisindeki startup a gidelim.
+74)Buradaki Configure services  methoduna bu iþlemi yapmasý için bir kod yazmamýz gerekir.Kod örneði   services.AddScoped<IProductRepository,EfCoreProductRepository>();
+75)Bir üst satýrdaki komutun anlamý AddScpoed adýnda bir services eklemek istiyorum bu servies generic yapýda tabi IProductRepository tipinde ben bir nesne oluþturursam herhan gibir yerde sen bunu görünce EfCoreProductRepository   olarak algýla demektýr.
+76)Bu iþlemi diðer  entitylerimiz içinde yapmamýz gerekir. Bu iþlemin aynýsýný Business projesi içerisindeki Service ve Managerlar içinde yapýlýr. Örneðin
+77) services.AddScoped<IProductService,ProductManager>(); Buda Ben IProductService türünden bir nesne oluþturduðumda sen bunu ProductManager türüne çevir demektir.
+78)Bütün bu iþlemler ardýndan  backend kýsmýmýz bitti artýk methodlarý kullanmak için WebUI gecerek controllerden gerekli islemleri yaparýz.
+79)Öncelik Anasayfada ürünlerimizi listelemek için gerekli methodlarý HomeController kýsmýnda  yapmak için geçelim.
+80)Home controller içerisinde baþlangýcta  Product  listelemek için  hazýrladýðýmýz methoda ulasmak için fieldimizi tanýmlarýz      private IProductService _productService; yazarýz ve ardýndan bu fieldýn için doldurmak için ctor yazýp consturactor oluþtururuz.
+81)Consturactor parametre vereke IProductService tipinden productService isimli bir parametre veririz.Daha sonra _productService  içerisine parametremizdeki productService ile oldururuz.
+82)iþlemin kod sal karþýlýðý þu þekilde      public class HomeController(IProductService _productService) {_productService=productService;} diyerek fiedlimiz IProductServicenin içerisindeki methodlarla doldurduk artýk kullanmaya hazýrýz.
+83)Index methodumuza ansayfada ürünleri listelemek için gerekli kodu yazýp gerýye dondurelým  kodsay karsýlýðý aþaðýdadýr.
+84)Productlarý home pagede listelemek için veritabanýnda oluþturdugumuz IsAprovved ve IsHome  larýn degerlerini kontrolu yaparak listeleme yapmasý için yeni bir method eklememýz gereklidir.Bu tarz yeni methodlar ekleme ihtiyacý duydugumuz zaman ilk önce data abstract ve concrete daha sonra business abstract ve concrete yazýlýr.
+85)Data daki Abstract içerisinde IProductRepository gidelim ve ilgili methodu yapalým   List<Product> GetHomePageProduct(); methodu interface imzasýný atarýz ve daha sonra kodlarýný yazmak için concrete geceriz.
+86)Burada IRepositoryProduct dan türetilen EfCoreProductRepository de implement ederek yeni methodun yazýlmasýný saðlarýz.Daha sonra method içerisine girip MiniShopContext tipinde bir deðiþken tanýmlayarak  sonra bu deðiþken içerisindeki products içersindekileri where sorgusu ile isAproved true ve ÝsHome True olanlarý listele komutu yazýlýr
+87)Bu iþlemin kodsal karþýlýðý iþse using(var context = new MiniShopContext()){return context.Products.Where(i=>i.IsAprovved && i.IsHome).Tolist(); } diyerek context deðiþkenin içerisindeki productslara bak where ile  filtereleme yaparak bu productlardan  IsAproved true ve IsHome true olanlarý listele dedik.
+88)Daha Sonra Datada iþimiz bitti ve bu deðiþiklikleri Bussines katmanýndada yaparak ilk abstract klasorundeki service sonra concretedeki manager kýsmýna tanýmlamamýz gerekir.
+89)Datanýn içerisindek abstract içerisindeki IProductRepository içinde yazdýgýmýz methodu kopayalayýp business katmanýndaký abstract içerisindeki IProductService kýsmýna yazarýz.Daha sonra bunu implement etmek için ProductManager kýsmýna geçeriz.
+90)Ýmplement ettikten sonra bu method içerisinde     return _productRepository.GetHomePageProducts(); yazarak _productRepository içerisine yazdýgýmýz methodu cagýrarak geriye döndürüz ve controllerde kullanýlmaya hazýr olur.
+91) public IActionResult Index(){return View(_productService.GetHomePageProducts());} þeklinde yazarak index view ýna geçerek gerekli listeleme frontend kýsmýný yaparýz.
+92)Fakat Anasayfada birden fazla veritabanýndan listeleme olacaðý için bunu partial   yaný parçalayarak baþka yerlerden çaðýrara kullanmak ne saðlýklýk yöntemdir oyuzden bunudan sonra partial mantýgýna gecerýz.
+93)Ve bu partial iþlemi için Controller gibi bir ViewComponents adýnda bir klasör oluþturup içerisine ViewComponent türünden bir class oluþtururuz.
+94)Oluþturuduktan sonra içersine  : ViewComponent diyerek türetiriz daha sonra controllerde olduðu gibi burada bi field sonra ctor la consturactor oluþturarark  hangi entitiy listeletceksen onun service interfaceýný tureterek kullanmaya saðlarýz burda Categoryleri listeletceðimiz için ICategoryService türünden field ve consturactor oluþtururuz.
+95)Daha sonra  iþlemi yapcak ViewComponent methodu oluþturuurz.   public IViewComponentResult Invoke(){} þeklinde bir method oluþturarak  iþlemlerimizi týpký controllerde yaptýmýz gibi yaparýz.
+96)Burada  if sorgusu ile  datanýn boþ olup olmadýgý sorgulayýp  deðilse göster bossa gosterme seklýnde bir kontrol yaparýz.
+
